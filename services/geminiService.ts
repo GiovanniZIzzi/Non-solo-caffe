@@ -1,17 +1,17 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-// We don't initialize here to avoid errors if API key is missing on load
-// Initialization happens inside functions
+// Safe access to env vars
+const API_KEY = import.meta.env.VITE_API_KEY || (window as any).API_KEY || '';
 
 export const geminiService = {
   
-  // Parse a natural language description or pasted list into a Product object
   parseProductInfo: async (text: string): Promise<any> => {
-    if (!process.env.API_KEY) {
-      throw new Error("API Key mancante");
+    if (!API_KEY) {
+      console.warn("API Key mancante per Gemini");
+      throw new Error("Funzionalità AI non disponibile: API Key mancante");
     }
 
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: API_KEY });
 
     try {
       const response = await ai.models.generateContent({
@@ -41,11 +41,10 @@ export const geminiService = {
     }
   },
 
-  // Suggest actions based on stock levels (Demo feature)
   analyzeStock: async (lowStockItems: string[]) => {
-    if (!process.env.API_KEY || lowStockItems.length === 0) return "Nessun suggerimento.";
+    if (!API_KEY || lowStockItems.length === 0) return "Nessun suggerimento (AI offline).";
 
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: API_KEY });
     try {
        const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
@@ -57,13 +56,10 @@ export const geminiService = {
     }
   },
 
-  // Parse an image of an invoice
   parseInvoice: async (base64Image: string): Promise<any[]> => {
-    if (!process.env.API_KEY) throw new Error("API Key mancante");
+    if (!API_KEY) throw new Error("API Key mancante");
 
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-    // Strip header if present to get pure base64
+    const ai = new GoogleGenAI({ apiKey: API_KEY });
     const base64Data = base64Image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
 
     try {
@@ -72,7 +68,7 @@ export const geminiService = {
             contents: {
                 parts: [
                     { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
-                    { text: "Analizza questa fattura/bolla. Estrai una lista di prodotti. Per ogni riga restituisci: 'description' (nome prodotto sulla fattura), 'quantity' (numero pezzi, converti in numero intero), 'unitCost' (prezzo unitario se visibile, altrimenti 0). Ignora totali, iva e intestazioni. Restituisci solo JSON Array." }
+                    { text: "Analizza questa fattura. Estrai prodotti: 'description', 'quantity', 'unitCost'. JSON Array." }
                 ]
             },
             config: {
@@ -98,4 +94,5 @@ export const geminiService = {
         throw error;
     }
   }
+};
 };
