@@ -1,0 +1,7 @@
+{
+  "name": "NON SOLO CAFFE' IOLANDA",
+  "description": "Inventory and financial management app for coffee shop warehouse logistics.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
