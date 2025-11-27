@@ -32,6 +32,9 @@ export default defineConfig({
     })
   ],
   base: './',
+  define: {
+    'process.env': {}
+  },
   build: {
     outDir: 'dist',
     sourcemap: false
